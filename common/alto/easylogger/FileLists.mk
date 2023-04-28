@@ -1,0 +1,3 @@
+ELOG_INCDIRS = .
+
+ELOG_C_SRCDIRS = .
