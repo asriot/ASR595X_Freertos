@@ -1,1 +1,3 @@
-# ASR595X_Freertos
+# ASR595X
+
+ASR595X is a low-power, high-performance, highly integrated combo SoC supporting 1x1 IEEE 802.11 b/g/n/ax and BLE 5.1. Thanks to the uniquely designed power management circuitry, this chip significantly reduces power consumption and peripheral components. The ASR595X supports the latest Wi-Fi 6 protocols, OFDMA, TWT, DL MU-MIMO, LDPC, and other key functions. At meanwhile, it offers easier and faster BLE networking with the help of the internally integrated BLE 5.1 protocol. The chip also supports a suite of multi-layered security solutions. ASR595X can be used either as a master chip or as a functional chip for WLAN connectivity matching with external master control.
