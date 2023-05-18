@@ -93,6 +93,9 @@ typedef OSStatus (*event_handler_t)( void* arg );
 typedef uint32_t lega_time_t;
 //typedef void* xTaskHandle;
 
+typedef uint64_t lega_tick_t;
+typedef void * lega_timeout_t;
+
 typedef struct
 {
     void *          handle;
@@ -581,6 +584,10 @@ OSStatus lega_rtos_get_threadinfo(lega_thread_t* thread, lega_threadinfo_t * inf
 uint32_t lega_rtos_get_free_heap_size(void);
 uint32_t lega_rtos_get_total_size(void);
 uint32_t lega_rtos_get_minimum_free_heap_size(void);
+
+void lega_rtos_set_timeout(lega_timeout_t *timeout);
+OSBool lega_rtos_check_timeout(lega_timeout_t *timeout,lega_tick_t *wait_ticks);
+uint64_t ms_to_tick(uint32_t timeout_ms);
 #ifdef __cplusplus
 }
 #endif

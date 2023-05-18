@@ -12,7 +12,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #ifndef _ASR_MATTER_CONFIG_H_
 #define _ASR_MATTER_CONFIG_H_
 
@@ -47,10 +46,9 @@ typedef enum ASR_MATTER_PARTITION_T
 
 int32_t asr_factory_config_read(asr_matter_partition_t matter_partition, uint8_t * buf, uint32_t buf_len, uint32_t * out_len);
 int32_t asr_factory_config_write(uint8_t * configbuffer, uint32_t buf_len);
-int32_t asr_factory_config_buffer_write(asr_matter_partition_t matter_partition, const void * buf,
-                                       uint32_t buf_len);
+int32_t asr_factory_config_buffer_write(asr_matter_partition_t matter_partition, const void * buf, uint32_t buf_len);
 uint8_t asr_factory_check();
-int32_t asr_factory_dac_prvkey_get(uint8_t *pRdBuf, uint32_t *pOutLen);
+int32_t asr_factory_dac_prvkey_get(uint8_t * pRdBuf, uint32_t * pOutLen);
 #endif
 
 #ifdef __cplusplus

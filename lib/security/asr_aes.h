@@ -15,6 +15,7 @@
 #ifndef _ASR_AES_H_
 #define _ASR_AES_H_
 
+#include <stddef.h>
 #include <stdint.h>
 
 /*! The size of the user's context prototype (see SaSiAesUserContext_t) in words. */

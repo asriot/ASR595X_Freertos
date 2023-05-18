@@ -1539,4 +1539,22 @@ uint32_t lega_rtos_get_minimum_free_heap_size(void)
 {
     return (uint32_t)xPortGetMinimumEverFreeHeapSize();
 }
+
+void lega_rtos_set_timeout(lega_timeout_t *timeout)
+{
+    vTaskSetTimeOutState((TimeOut_t * const)timeout);
+}
+
+OSBool lega_rtos_check_timeout(lega_timeout_t *timeout,lega_tick_t *wait_ticks)
+{
+    if(xTaskCheckForTimeOut((TimeOut_t * const)timeout,wait_ticks) == pdTRUE)
+        return TRUE;
+    else
+        return FALSE;
+}
+
+uint64_t ms_to_tick(uint32_t timeout_ms)
+{
+    return (portTickType) ( timeout_ms / ms_to_tick_ratio );
+}
 /***************************  end   *************************************/
