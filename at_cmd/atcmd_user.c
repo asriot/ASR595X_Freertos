@@ -130,7 +130,11 @@ int ap_conn(int argc, char **argv)
 
     return RSP_NULL;
 }
-
+int ap_close(int argc, char **argv)
+{
+    lega_wlan_close();
+    return 0;
+}
 int at_kv_clear(int argc, char **argv)
 {
     asr_flash_erase(PARTITION_PARAMETER_2, 0, KV_MAX_SIZE);
@@ -161,7 +165,11 @@ cmd_entry comm_conn = {
     .help = "wifi_open sta SSID PASSWORD",
     .function = ap_conn,
 };
-
+cmd_entry comm_close = {
+    .name = "wifi_close",
+    .help = "wifi_close",
+    .function = ap_close,
+};
 cmd_entry comm_at_kv_clear = {
     .name = "at_kv_clear",
     .help = "at_kv_clear",
@@ -173,6 +181,7 @@ void lega_at_user_cmd_register(void)
     lega_at_cmd_register(&comm_test1);
     lega_at_cmd_register(&comm_test2);
     lega_at_cmd_register(&comm_conn);
+    lega_at_cmd_register(&comm_close);
     lega_at_cmd_register(&comm_at_kv_clear);
 }
 #endif

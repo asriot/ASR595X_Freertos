@@ -391,7 +391,7 @@ cmd_entry comm_at_dis = {
 void lega_at_matter_cmd_register(void)
 {
     lega_at_cmd_register(&comm_at_matter);
-    lega_at_cmd_register(&comm_at_reset_matter);
+    //lega_at_cmd_register(&comm_at_reset_matter);
     lega_at_cmd_register(&comm_at_onoff);
 #if CONFIG_ENABLE_ASR_FACTORY_TEST
     lega_at_cmd_register(&comm_at_facotry);
