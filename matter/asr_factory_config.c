@@ -24,7 +24,9 @@
 #if CONFIG_ENABLE_ASR_FACTORY_DATA_PROVIDER
 static uint8_t asr_factory_config_para[ASR_MATTER_PARTITION_MAX][8] = {
     "iter-cnt", "    salt", "verifier", "discrimi", "dac-cert", "dacPvkey", "dacPbkey", "pai-cert",
-    "cert-dcl", "vendorNm", "vendorId", "prodctNm", "prodctId", "rdid-uid", " chip-id", " ftyHash"
+    "cert-dcl", "vendorNm", "vendorId", "prodctNm", "prodctId", "rdid-uid", " chip-id", "mfg-date",
+    "serialNm", "  hw-ver", "hwVerStr",
+    " ftyHash"
 };
 
 #define ASR_CONFIG_LEN_SIZE 4
