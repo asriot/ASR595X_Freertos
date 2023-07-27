@@ -499,6 +499,7 @@ void app_set_ble_test_mode(bool mode);
 void app_ble_set_target_addr(uint8_t * target);
 uint16_t app_ble_advertising_stop(uint8_t adv_idx);
 int app_ble_advertising_start(uint8_t adv_idx,ble_adv_data_t *data,ble_scan_data_t *scan_data);
+int app_ble_start_advertising_with_param(uint8_t adv_idx,uint8_t own_addr_type,sonata_gap_directed_adv_create_param_t * param, ble_adv_data_t * data,ble_scan_data_t * scan_data);
 void app_gap_set_scan_cb(app_ble_scan_callback_t cb);
 int app_ble_stack_stop(ble_stack_opr_module_id_t module);
 int app_ble_stack_start(ble_stack_opr_module_id_t module);

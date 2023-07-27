@@ -615,12 +615,6 @@ static void app_clean_data_cb(void)
 #define APP_BLE_MAX_MTU_SIZE (512)
 #define APP_BLE_FUN_ERROR (0xFE)
 
-////#if (defined(CFG_PTA_TEST) || defined(CFG_BLE_WVT_ON))
-//#define APP_WVT_ENABLE    1
-////#else
-////#define APP_WVT_ENABLE    0
-////#endif
-
 #define BLE_MCRC_MIN_INTERVAL 192
 #define MS_BLE_CHANNEL_NUM 7
 
@@ -668,10 +662,7 @@ uint8_t ble_adv_change_state[APP_MAX_ADV_IDX] = { 0, 0, 0 };
 
 uint8_t app_connected_state[7] = { APP_STATE_DISCONNECTED, APP_STATE_DISCONNECTED, APP_STATE_DISCONNECTED, APP_STATE_DISCONNECTED,
                                    APP_STATE_DISCONNECTED, APP_STATE_DISCONNECTED, APP_STATE_DISCONNECTED };
-// uint8_t adv_value[MAX_ADV_DATA_LEN] = {
-//         0x02, 0x01, 0x06, 0x06, 0x09, 0x6d, 0x69, 0x64, 0x64, 0x64, 0x12, 0xFF, 0xA8, 0x06, 0x01,
-//         0x31, 0x38, 0x32, 0x37, 0x33, 0x36, 0x34, 0x35, 0x46, 0x43, 0x30, 0x30, 0x30, 0x34
-// };
+
 
 uint8_t adv_value[MAX_ADV_DATA_LEN]               = { 0x04, 0x09, 'a', 'b', 'c', 0 };
 enum BLE_ADV_STATE ble_adv_state[APP_MAX_ADV_IDX] = { BLE_ADV_STATE_IDLE, BLE_ADV_STATE_IDLE, BLE_ADV_STATE_IDLE };
@@ -737,16 +728,7 @@ static uint16_t app_ble_set_adv_data(uint8_t adv_id);
  * ENUMERATIONS
  ****************************************************************************************
  */
-/*
-void print_serv_env(void)
-{
 
-    printf("service_reg_env.reg_nb %d %d\r\n",service_reg_env.reg_nb,service_reg_env.add_nb);
-    for(int i = 0; i < service_reg_env.reg_nb; i++)
-    {
-        printf("list :0x%lx %d\r\n",service_reg_env.reg_list[i],service_reg_env.reg_list[i]->nb_att);
-    }
-}*/
 /*!
  * @brief
  */
@@ -1270,69 +1252,77 @@ int app_ble_advertising_start(uint8_t adv_idx, ble_adv_data_t * data, ble_scan_d
     return 0;
 }
 
-void app_ble_config_legacy_advertising_with_param(uint8_t own_addr_type, sonata_gap_directed_adv_create_param_t * param)
-{
-    APP_TRC("APP: %s  \r\n", __FUNCTION__);
-    ble_adv_state[APP_CONN_ADV_IDX] = BLE_ADV_STATE_CREATING;
-    current_adv_idx                 = APP_CONN_ADV_IDX;
-    uint16_t ret = sonata_ble_config_legacy_advertising(own_addr_type, param); // Next event:SONATA_GAP_CMP_ADVERTISING_CONFIG
-    if (ret != API_SUCCESS)
-    {
-        APP_TRC("APP: %s  ERROR:%02X\r\n", __FUNCTION__, ret);
-        ble_adv_state[APP_CONN_ADV_IDX] = BLE_ADV_STATE_IDLE;
-    }
-}
 
-void app_ble_start_advertising_with_param(sonata_gap_directed_adv_create_param_t * param, ble_adv_data_t * data,
-                                          ble_scan_data_t * scan_data, uint8_t own_addr_type, uint16_t duration,
-                                          uint8_t max_adv_evt)
+int app_ble_start_advertising_with_param(uint8_t adv_idx,uint8_t own_addr_type,sonata_gap_directed_adv_create_param_t * param, ble_adv_data_t * data,
+                                          ble_scan_data_t * scan_data)
 {
-    APP_TRC("APP: %s  \r\n", __FUNCTION__);
+
+    APP_TRC("************************%s**********************************  adv_idx=%d\r\n", __FUNCTION__, adv_idx);
     if (data->ble_advdataLen > MAX_ADV_DATA_LEN)
     {
-        APP_TRC("APP: %s ,Error: adv data length=%d, \r\n", __FUNCTION__, data->ble_advdataLen);
-        return;
+        APP_TRC_ERR("Error: adv data length=%d\r\n", data->ble_advdataLen);
+        return -1;
     }
     if (NULL != scan_data && scan_data->ble_respdataLen > MAX_ADV_DATA_LEN)
     {
-        APP_TRC("APP: %s ,Error: scan response data length=%d, \r\n", __FUNCTION__, scan_data->ble_respdataLen);
-        return;
+        APP_TRC_ERR("Error: scan response data length=%d\r\n", scan_data->ble_respdataLen);
+        return -1;
     }
-    ble_adv_data[APP_CONN_ADV_IDX].ble_advdataLen = data->ble_advdataLen;
-    memcpy((void *) &ble_adv_data[APP_CONN_ADV_IDX], (void *) data->ble_advdata, data->ble_advdataLen);
+    if (adv_idx >= APP_MAX_ADV_IDX)
+    {
+        APP_TRC_ERR("Error: adv_idx=%d\r\n", adv_idx);
+        return -1;
+    }
+    ble_adv_data[adv_idx].ble_advdataLen = data->ble_advdataLen;
+    memcpy((void *) &ble_adv_data[adv_idx], (void *) data->ble_advdata, data->ble_advdataLen);
     if (NULL != scan_data && scan_data->ble_respdataLen != 0)
     {
-        memcpy((void *) &ble_scan_data[APP_CONN_ADV_IDX], (void *) scan_data->ble_respdata, scan_data->ble_respdataLen);
-        ble_scan_data[APP_CONN_ADV_IDX].ble_respdataLen = scan_data->ble_respdataLen;
+        memcpy((void *) &ble_scan_data[adv_idx], (void *) scan_data->ble_respdata, scan_data->ble_respdataLen);
+        ble_scan_data[adv_idx].ble_respdataLen = scan_data->ble_respdataLen;
     }
     else
     {
-        ble_scan_data[APP_CONN_ADV_IDX].ble_respdataLen = 0;
+        ble_scan_data[adv_idx].ble_respdataLen = 0;
     }
-    app_duration                           = duration;
-    app_max_adv_evt                        = max_adv_evt;
-    ble_adv_set_state[APP_CONN_ADV_IDX]    = APP_BLE_ADV_ON;
-    ble_adv_change_state[APP_CONN_ADV_IDX] = 1;
-    if ((ble_adv_state[APP_CONN_ADV_IDX] != BLE_ADV_STATE_IDLE) && (ble_adv_state[APP_CONN_ADV_IDX] != BLE_ADV_STATE_CREATED) &&
-        ble_adv_state[APP_CONN_ADV_IDX] != BLE_ADV_STATE_STARTED)
+    ble_adv_set_state[adv_idx]    = APP_BLE_ADV_ON;
+    ble_adv_change_state[adv_idx] = 1;
+
+    if ((ble_adv_state[adv_idx] != BLE_ADV_STATE_IDLE) && (ble_adv_state[adv_idx] != BLE_ADV_STATE_CREATED) &&
+        ble_adv_state[adv_idx] != BLE_ADV_STATE_STARTED)
     {
-        return;
+        APP_TRC("APP: %s ,myself state=%d, \r\n", __FUNCTION__, ble_adv_state[adv_idx]);
+        return -1;
     }
-    current_adv_idx                        = APP_CONN_ADV_IDX;
-    ble_adv_change_state[APP_CONN_ADV_IDX] = 0;
-    if (ble_adv_state[APP_CONN_ADV_IDX] == BLE_ADV_STATE_CREATED)
+    if (app_other_adv_is_setting_state(adv_idx))
     {
-        ble_adv_state[APP_CONN_ADV_IDX] = BLE_ADV_STATE_SETTING_ADV_DATA;
-        app_ble_set_adv_data(current_adv_id);
+        APP_TRC("APP: %s ,other state=%d, \r\n", __FUNCTION__, ble_adv_state[adv_idx]);
+        return -1;
     }
-    else if (ble_adv_state[APP_CONN_ADV_IDX] == BLE_ADV_STATE_STARTED)
+    current_adv_idx               = adv_idx;
+    ble_adv_change_state[adv_idx] = 0;
+    if (ble_adv_state[adv_idx] == BLE_ADV_STATE_CREATED)
     {
-        app_ble_set_adv_data(current_adv_id);
+        ble_adv_state[adv_idx] = BLE_ADV_STATE_SETTING_ADV_DATA;
+        app_ble_set_adv_data(adv_idx);
+    }
+    else if (ble_adv_state[adv_idx] == BLE_ADV_STATE_STARTED)
+    {
+        app_ble_set_adv_data(adv_idx);
     }
     else
     {
-        app_ble_config_legacy_advertising_with_param(own_addr_type, param);
+#ifdef PUB_RAND_ADDR_COEXIST
+        own_addr_type = SONATA_GAP_SELF_SET_RAND_ADDR;
+#endif
+        uint16_t ret = sonata_ble_config_legacy_advertising(own_addr_type, param);
+        if (ret != API_SUCCESS)
+        {
+           APP_TRC("APP: %s  ERROR:%02X\r\n", __FUNCTION__, ret);
+           ble_adv_state[APP_CONN_ADV_IDX] = BLE_ADV_STATE_IDLE;
+           return -1;
+        }
     }
+    return 0;
 }
 
 static bool app_get_is_scan_setting_state(enum BLE_SCAN_STATE curr_scan_state)
@@ -1744,22 +1734,7 @@ static void app_ble_on()
     cmd.hl_trans_dbg = true;
     printf("%s ,WVT Enable, \r\n", __FUNCTION__);
 #endif
-    // Get bond status from FS
-    //    uint8_t length = SONATA_LEN_PERIPH_BONDED;
-    //    if (sonata_fs_read(SONATA_TAG_PERIPH_BONDED, &length, (uint8_t *)&app_bond) != SONATA_FS_OK)
-    //    {
-    // If read value is invalid, set status to not bonded
-    //        app_bond = 0;
-    //    }
-    //    if (app_bond == 1)
-    //    {
-    //        memcpy(cmd.irk.key, app_loc_irk, 16);
-    //    }
-    //    length = SONATA_LEN_BONDED_DEV_INFO;
-    //    if (sonata_fs_read(SONATA_TAG_BONDED_DEV_INFO, &length, (uint8_t *)&bonded_dev_info) != SONATA_FS_OK)
-    //    {
-    //        APP_TRC("APP: %s  read bonded device info fail \r\n", __FUNCTION__);
-    //    }
+
 
     uint16_t ret = sonata_ble_on(&cmd); // Next event:SONATA_GAP_CMP_BLE_ON
     if (ret != API_SUCCESS)
@@ -1773,25 +1748,7 @@ extern void ble_reset_cmp(void);
  * LOCAL FUNCTION DEFINITIONS    Callback functions
  ****************************************************************************************
  */
-static void test_adv_h(void)
-{
-    sonata_gap_directed_adv_create_param_t param = { 0 };
-    param.disc_mode                              = SONATA_GAP_ADV_MODE_GEN_DISC;
-    param.prop                                   = SONATA_GAP_ADV_PROP_UNDIR_CONN_MASK;
-    // param.max_tx_pwr = 0xE2;
-    param.filter_pol = SONATA_ADV_ALLOW_SCAN_ANY_CON_ANY;
-    //    msg->adv_param.adv_param.peer_addr.addr.addr:00
-    param.addr_type    = SONATA_GAP_STATIC_ADDR;
-    param.adv_intv_min = BLE_MCRC_MIN_INTERVAL;
-    param.adv_intv_max = BLE_MCRC_MIN_INTERVAL;
-    param.chnl_map     = MS_BLE_CHANNEL_NUM;
-    param.phy          = SONATA_GAP_PHY_LE_1MBPS;
-    ble_adv_data_t data_Set;
-    memmove(data_Set.ble_advdata, adv_value, adv_length);
-    data_Set.ble_advdataLen = adv_length;
 
-    app_ble_start_advertising_with_param(&param, &data_Set, NULL, SONATA_GAP_STATIC_ADDR, 0, 0);
-}
 #ifdef MEDIA_MATTER_TEST
 void adv_media_connect_start()
 {
@@ -2074,10 +2031,6 @@ static uint16_t app_ble_complete_event_handler(sonata_ble_complete_type opt_id, 
         cb_result = CB_REJECT; // delete scan instance
         break;
     case SONATA_GAP_CMP_INITIATING_DELETE: // 0x0F10
-        // if (app_ble_check_target_addr())
-        // {
-        //     sonata_ble_gatt_disc_all_characteristic(ble_connect_id, 1, 0XFFFF);
-        // }
         break;
     case SONATA_GATT_CMP_NOTIFY:
         APP_TRC("CMP: SONATA_GATT_CMP_NOTIFY, seq:%d \r\n", (uint16_t) dwparam);
@@ -2099,7 +2052,6 @@ static uint16_t app_ble_complete_event_handler(sonata_ble_complete_type opt_id, 
         break;
     case SONATA_GATT_CMP_DISC_ALL_SVC: // 0x0402
         APP_TRC("CMP: SONATA_GATT_CMP_DISC_ALL_SVC, seq:%d \r\n", (uint16_t) dwparam);
-        // sonata_ble_gatt_read_by_handle(param, demo_handle_id);
         if (ble_cb_fun != NULL)
         {
             msg.event_type     = APP_BLE_STACK_EVENT_CMP_SVC_DISC;
@@ -2118,7 +2070,6 @@ static uint16_t app_ble_complete_event_handler(sonata_ble_complete_type opt_id, 
         break;
     case SONATA_GATT_CMP_DISC_BY_UUID_SVC:
         APP_TRC("CMP: SONATA_GATT_CMP_DISC_BY_UUID_SVC, seq:%d \r\n", (uint16_t) dwparam);
-        // sonata_ble_gatt_read_by_handle(param, demo_handle_id);
         if (ble_cb_fun != NULL)
         {
             msg.event_type     = APP_BLE_STACK_EVENT_CMP_SVC_DISC;
@@ -2483,15 +2434,12 @@ static uint16_t app_gap_scan_result_callback(sonata_gap_ext_adv_report_ind_t * r
             ((app_scan_param.scan_param.prop & SONATA_GAP_SCAN_PROP_ACTIVE_1M_BIT) ||
              (app_scan_param.scan_param.prop & SONATA_GAP_SCAN_PROP_ACTIVE_CODED_BIT)))
         {
-
-            // APP_TRC("ADV_LEG wait rsp\r\n");
             adv_ind_flag = 1;
             app_gap_backup_scan_result(result);
             return CB_DONE;
         }
         else
         {
-            // APP_TRC("ADV_LEG report %d\r\n", result->rssi);
             adv_ind_flag = 0;
             if (p_scan_cb)
             {
@@ -2616,17 +2564,14 @@ void app_ble_gatt_add_srv_rsp(uint16_t handle)
 
 ble_gatt_att_reg_list_t * app_ble_get_reg_list_by_handle(uint16_t handle)
 {
-    // print_serv_env();
     for (int i = 0; i < service_reg_env.reg_nb; i++)
     {
         ble_gatt_att_reg_list_t * p_list = service_reg_env.reg_list[i];
-        //printf("nb_att:%d\r\n", p_list->nb_att);
         if (p_list->start_hdl <= handle && (p_list->start_hdl + p_list->nb_att) >= handle)
         {
             return p_list;
         }
     }
-    // printf("[API]get null handle\r\n");
     return NULL;
 }
 
@@ -2677,7 +2622,7 @@ void app_user_config_write_cb(uint16_t handle, uint8_t * data, uint16_t size)
 
 void app_ble_gatt_write_request_handler(uint16_t handle, uint16_t length, uint8_t * p_value)
 {
-    // printf("[API]ble_gatt_write_request_handler %d\r\n",handle);
+
     APP_TRC("APP: %s ,handle=%d,length=%d, \r\n", __FUNCTION__, handle, length);
     ble_gatt_att_reg_list_t * p_list = app_ble_get_reg_list_by_handle(handle);
     if (NULL == p_list)
@@ -2692,7 +2637,6 @@ void app_ble_gatt_write_request_handler(uint16_t handle, uint16_t length, uint8_
     else
     {
         app_user_config_write_cb(handle, p_value, length); // TODO !!!!!!!!!!20200923
-        // printf("[API] write NULL Pointer\r\n");
     }
 }
 
@@ -3200,9 +3144,6 @@ static uint16_t app_gap_bond_callback(uint8_t conidx, struct sonata_gap_bond_ind
     case SONATA_GAP_PAIRING_FAILED:
         // Reason see (SONATA_GAP_SMP_REM_ERR_MASK|smp_pair_fail_reason)
         APP_TRC("APP: %s  SONATA_GAP_PAIRING_FAILED,Reason:%02X(X)\r\n", __FUNCTION__, ind->data.reason);
-        // app_ble_config_scanning();
-        // app_stop_scan_timer_start();
-        // sonata_ble_gap_start_security(conidx, GAP_AUTH_REQ_MITM_BOND);
         sonata_ble_gap_disconnect(conidx, SONATA_CO_ERROR_CONN_REJ_SECURITY_REASONS);
         break;
     case SONATA_GAP_LTK_EXCH:
@@ -3902,15 +3843,7 @@ static uint16_t app_gatt_event_callback(uint8_t conidx, uint16_t handle, uint16_
 static uint16_t app_gatt_event_req_callback(uint8_t conidx, uint16_t handle, uint16_t type, uint16_t length, uint8_t * value)
 {
     APP_TRC("APP: %s,handle = %04X, type = %04X,length = %04X\r\n", __FUNCTION__, handle, type, length);
-
-    // APP_TRC("APP_CB: %s, Master get Ind data form Slave. Data:", __FUNCTION__);
-    // for (int i = 0; i < length; ++i)
-    // {
-    //     APP_TRC("%02X[%c] ", value[i],value[i]);
-    // }
-    // APP_TRC("\r\n");
     sonata_ble_gatt_send_event_confirm(conidx, handle);
-
     if (ble_cb_fun != NULL)
     {
         app_ble_stack_msg_t msg     = { 0 };
@@ -4098,7 +4031,7 @@ uint16_t gap_active_stopped_callback(uint8_t actv_idx, uint8_t type, uint8_t rea
         ble_init_idx = APP_BLE_INIT_INVALID_IDX;
         return CB_REJECT; // delete init instance
     }
-    return CB_DONE;
+    return CB_REJECT;
 }
 
 static ble_gap_callback ble_gap_callbacks = {
@@ -4179,70 +4112,6 @@ sonata_api_app_msg_t app_at_cmd_msg = {
  * GLOBAL VARIABLE DEFINITIONS
  ****************************************************************************************
  */
-
-/*
- * GLOBAL FUNCTION DEFINITIONS
- ****************************************************************************************
- */
-#if 0
-void msm_ble_app_start_adv()
-{
-    char *name = "msm_ble_demo";
-    uint8_t dev_name_len;
-    uint8_t *pos;
-    uint8_t buf[256];
-    uint8_t advDataLen;
-    uint8_t respDataLen = 0;
-    pos = buf;
-    dev_name_len = strlen(name);
-    *pos++ = dev_name_len + 1;  //pos len;  (payload + type)
-    *pos++  = '\x09';   //pos: type
-    memcpy(pos, name, dev_name_len);
-    pos += dev_name_len;
-    advDataLen = pos - buf;
-    ms_hal_ble_adv_start(buf,advDataLen,NULL,0);
-
-}
-uint16_t perm_array[10] = {0,PRD_NA,PWR_NA, PRD_NA,PRD_NA,PIND_NA,PRD_NA | PWR_NA,PRD_NA | PWR_NA};
-void msm_ble_app_add_service(void)
-{
-
-    ms_test_ble_service_init();
-    return;
-    for(int i =0; i < 10 ;i++)
-    {
-        printf("array 0x%x\r\n",perm_array[i]);
-    }
-    /*
-    ms_hal_ble_service_attrib_t  * att[BLE_SERVICE_IDX_NB] =
-    {
-        [BLE_SERVICE_IDX]                   =  ms_ble_service_atts,
-        [BLE_SERVICE_RECIEVE_CHAR]          =  &ms_ble_service_atts[1],
-        [BLE_SERVICE_RECIEVE_VAL]           =  &ms_ble_service_atts[2],
-        [BLE_SERVICE_RECIEVE_DESCIPTION]    =  &ms_ble_service_atts[3],
-
-        [BLE_SERVICE_SEND_CHAR]             =  &ms_ble_service_atts[4],
-        [BLE_SERVICE_SEND_VAL]              =  &ms_ble_service_atts[5],
-        [BLE_SERVICE_SEND_CONFIG]           =  &ms_ble_service_atts[6],
-        [BLE_SERVICE_SEND_DESCIPTION]       =  &ms_ble_service_atts[7],
-        };
-        ms_hal_ble_gatt_service_add(&start_handle,att,BLE_SERVICE_IDX_NB);
-        */
-}
-
-int ms_hal_ble_stack_callback_handler(ms_hal_ble_stack_event_t event)
-{
-    switch(event)
-    {
-        case MS_HAL_BLE_STACK_EVENT_STACK_READY:
-            msm_ble_app_add_service();
-            msm_ble_app_start_adv();
-            printf("ready!!!!");
-         break;
-         default :  printf("ms_hal_ble_stack_callback_handler %d \r\n",event);
-    }
-}
-#endif
 void app_init(void)
 {
     APP_TRC("APP: %s  \r\n", __FUNCTION__);
@@ -4252,16 +4121,12 @@ void app_init(void)
     sonata_ble_register_gatt_callback(&ble_gatt_callbacks);
     sonata_ble_register_complete_callback(&ble_complete_callbacks);
     sonata_ble_register_response_callback(&ble_rsp_callbacks);
-    // ms_hal_ble_set_stack_event_register(ms_hal_ble_stack_callback_handler);
     app_data_init();
     app_ble_on();
 
     sonata_api_register_app_timer_callback(&app_timer_callbacks);
 
 #if !defined ALIOS_SUPPORT && !defined HARMONYOS_SUPPORT
-    // at command init
-    //    at_init();
-
     // register app message
     sonata_api_app_msg_register(&app_at_cmd_msg);
 #endif
@@ -4354,17 +4219,7 @@ static uint8_t app_timer_handler(uint16_t id)
             if (!adv)
             {
                 adv_value[9] = test_count;
-#ifdef HARMONYOS_TEMP
-#else
-                // ms_hal_ble_adv_start(adv_value,adv_length,NULL,0);
-#endif
-            }
-            else
-            {
-#ifdef HARMONYOS_TEMP
-#else
-                // ms_hal_ble_adv_stop();
-#endif
+
             }
             adv = 1 - adv;
             test_count--;
@@ -4399,7 +4254,6 @@ static uint8_t app_timer_handler(uint16_t id)
         }
         else
         {
-
             flag = 0;
             APP_TRC("APP: %s  . id=%d test done \r\n", __FUNCTION__, id);
             sonata_api_app_timer_clear(2);
@@ -4433,8 +4287,6 @@ static uint8_t app_timer_handler(uint16_t id)
     if (id == 4)
     {
         sonata_ble_gatt_write(ble_connect_id, write_handle + 1, 0, 0, 128, write_value);
-
-        // sonata_ble_gatt_write_no_response(ble_connect_id, write_handle + 1,0,0,128,write_value);
         sonata_api_app_timer_set(4, test_interval);
         sonata_api_app_timer_active(4);
     }
@@ -4513,12 +4365,5 @@ void app_register_sec_cb(app_sec_req_cb cb)
 {
     sec_req_call = cb;
 }
-#if 0
-extern CRITICAL_FUNC_SEG void sonata_ble_isr(void);
-CRITICAL_FUNC_SEG void BLE_IRQHandler(void)
-{
-    sonata_ble_isr();
-}
-#endif
 
 /// @} APP
