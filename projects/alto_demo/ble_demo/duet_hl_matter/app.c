@@ -4031,7 +4031,7 @@ uint16_t gap_active_stopped_callback(uint8_t actv_idx, uint8_t type, uint8_t rea
         ble_init_idx = APP_BLE_INIT_INVALID_IDX;
         return CB_REJECT; // delete init instance
     }
-    return CB_DONE;
+    return CB_REJECT;
 }
 
 static ble_gap_callback ble_gap_callbacks = {
