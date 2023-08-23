@@ -250,7 +250,7 @@ extern "C" {
 #define DEFAULT_UDP_RECVMBOX_SIZE       20
 #define DEFAULT_TCP_RECVMBOX_SIZE       10
 
-#define LWIP_TCPIP_CORE_LOCKING         0
+#define LWIP_TCPIP_CORE_LOCKING         1
 #define LWIP_TCPIP_CORE_LOCKING_INPUT   0
 
 #define ETHIF_IN_TASK_STACKSIZE         512 /* unit 4 byte */
