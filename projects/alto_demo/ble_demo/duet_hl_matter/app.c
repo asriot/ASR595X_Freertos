@@ -2009,7 +2009,22 @@ static uint16_t app_ble_complete_event_handler(sonata_ble_complete_type opt_id, 
         }
         break;
     case SONATA_GAP_CMP_ADVERTISING_DELETE:
-        ble_adv_state[adv_idx] = BLE_ADV_STATE_IDLE;
+        {
+           if(ble_adv_idx_table[APP_CONN_ADV_IDX] == param)
+           {
+                adv_idx = APP_CONN_ADV_IDX;
+           }
+           else if(ble_adv_idx_table[APP_MATTER_ADV_IDX] == param)
+           {
+               adv_idx = APP_MATTER_ADV_IDX;
+           }
+           else if(ble_adv_idx_table[APP_NON_CONN_ADV_IDX] == param)
+           {
+               adv_idx = APP_NON_CONN_ADV_IDX;
+           }
+           ble_adv_state[adv_idx] = BLE_ADV_STATE_IDLE;
+           ble_adv_idx_table[adv_idx] = 0xFF;
+        }
         break;
     case SONATA_GAP_CMP_PROFILE_TASK_ADD: // 0x011B
         break;
