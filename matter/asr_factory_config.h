@@ -26,7 +26,9 @@ extern "C" {
 
 typedef enum ASR_MATTER_PARTITION_T
 {
-    ASR_ITERATION_COUNT_PARTITION = 0x00,
+    ASR_VERSION_PARTITION = 0x00,
+    ASR_CONFIG_PARTITION,
+    ASR_ITERATION_COUNT_PARTITION,
     ASR_SALT_PARTITION,
     ASR_VERIFIER_PARTITION,
     ASR_DISCRIMINATOR_PARTITION,
@@ -45,9 +47,16 @@ typedef enum ASR_MATTER_PARTITION_T
     ASR_SERIAL_NUMBER_PARTITION,
     ASR_HARDWARE_VERSION_PARTITION,
     ASR_HARDWARE_VERSION_STR_PARTITION,
-    ASR_FACTORY_HASH_PARTITION,
     ASR_MATTER_PARTITION_MAX,
 } asr_matter_partition_t;
+
+typedef struct {
+    const char *partition_name;
+} matter_partition_t;
+
+#define DAC_PRIKEY_LEN 32
+#define MATTER_FACTORY_VERSION 2
+#define MATTER_NO_KEY 0x01
 
 int32_t asr_factory_config_read(asr_matter_partition_t matter_partition, uint8_t * buf, uint32_t buf_len, uint32_t * out_len);
 int32_t asr_factory_config_write(uint8_t * configbuffer, uint32_t buf_len);

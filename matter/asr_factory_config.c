@@ -12,277 +12,274 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-#include "asr_factory_config.h"
-#include "asr_aes.h"
-#include "asr_efuse.h"
-#include "asr_flash.h"
-#include "asr_hash.h"
-#include "lega_rtos_api.h"
 #include "string.h"
+#include "stdio.h"
+#include "asr_factory_config.h"
+#include "asr_flash.h"
+#include "lega_rtos_api.h"
+#include "tlv_decode.h"
+#include "asr_rv32.h"
 
 #if CONFIG_ENABLE_ASR_FACTORY_DATA_PROVIDER
-static uint8_t asr_factory_config_para[ASR_MATTER_PARTITION_MAX][8] = {
-    "iter-cnt", "    salt", "verifier", "discrimi", "dac-cert", "dacPvkey", "dacPbkey", "pai-cert",
-    "cert-dcl", "vendorNm", "vendorId", "prodctNm", "prodctId", "rdid-uid", " chip-id", "mfg-date",
-    "serialNm", "  hw-ver", "hwVerStr",
-    " ftyHash"
+
+/* Logic partition on flash devices for matter */
+const matter_partition_t asr_matter_partitions_table[] =
+{
+    [ASR_VERSION_PARTITION] =
+    {
+        .partition_name = "version",
+    },
+    [ASR_CONFIG_PARTITION] =
+    {
+        .partition_name = "config",
+    },
+    [ASR_ITERATION_COUNT_PARTITION] =
+    {
+        .partition_name = "iteration-count",
+    },
+    [ASR_SALT_PARTITION] =
+    {
+        .partition_name = "salt",
+    },
+    [ASR_VERIFIER_PARTITION] =
+    {
+        .partition_name = "verifier",
+    },
+    [ASR_DISCRIMINATOR_PARTITION] =
+    {
+        .partition_name = "discriminator",
+    },
+    [ASR_DAC_CERT_PARTITION] =
+    {
+        .partition_name = "dac-cert",
+    },
+    [ASR_DAC_KEY_PARTITION] =
+    {
+        .partition_name = "dac-pri-key",
+    },
+    [ASR_DAC_PUB_KEY_PARTITION] =
+    {
+        .partition_name = "dac-pub-key",
+    },
+    [ASR_PAI_CERT_PARTITION] =
+    {
+        .partition_name = "pai-cert",
+    },
+    [ASR_CERT_DCLRN_PARTITION] =
+    {
+        .partition_name = "cert-dclrn",
+    },
+    [ASR_VENDOR_NAME_PARTITION] =
+    {
+        .partition_name = "vendor-name",
+    },
+    [ASR_VENDOR_ID_PARTITION] =
+    {
+        .partition_name = "vendor-id",
+    },
+    [ASR_PRODUCT_NAME_PARTITION] =
+    {
+        .partition_name = "product-name",
+    },
+    [ASR_PRODUCT_ID_PARTITION] =
+    {
+        .partition_name = "product-id",
+    },
+    [ASR_ROTATING_UNIQUE_ID_PARTITION] =
+    {
+        .partition_name = "rd-id-uid",
+    },
+    [ASR_CHIP_ID_PARTITION] =
+    {
+        .partition_name = "chip-id",
+    },
+    [ASR_MANUFACTURY_DATE_PARTITION] =
+    {
+        .partition_name = "mfg-date",
+    },
+    [ASR_SERIAL_NUMBER_PARTITION] =
+    {
+        .partition_name = "serial-num",
+    },
+    [ASR_HARDWARE_VERSION_PARTITION] =
+    {
+        .partition_name = "hardware-ver",
+    },
+    [ASR_HARDWARE_VERSION_STR_PARTITION] =
+    {
+        .partition_name = "hw-ver-str",
+    },
+    [ASR_MATTER_PARTITION_MAX] =
+    {
+        .partition_name = NULL, //for end don't change,
+    }
 };
 
-#define ASR_CONFIG_LEN_SIZE 4
-#define ASR_CONFIG_NAME_SIZE 8
-
-static uint32_t asr_factory_dac_private_key_offset = 0;
-
-int32_t asr_factory_config_data_search(asr_matter_partition_t matter_partition, uint8_t * buf, uint32_t * pBufLen,
-                                       uint32_t * puiOffset)
+int32_t asr_factory_config_write(uint8_t * configbuffer, uint32_t buf_len)
 {
-    if ((NULL == buf) || (NULL == puiOffset) || (NULL == pBufLen))
-    {
-        return -1;
-    }
-
-    uint8_t * pFactoryPara = asr_factory_config_para[matter_partition];
-    uint32_t usOffset      = 0;
-    uint8_t ucParaName[8]  = { 0 };
-    int32_t ret            = 0;
-    uint32_t uiDataLen     = 0;
-
-    do
-    {
-        usOffset += uiDataLen;
-
-        ret = asr_flash_read(ASR_CONFIG_BASE, (uint32_t *) &usOffset, (void *) ucParaName, ASR_CONFIG_NAME_SIZE);
-        if (ret != 0)
-        {
-            printf("asr_flash_read ASR_CONFIG_NAME_SIZE failed\r\n");
-            return ret;
-        }
-
-        ret = asr_flash_read(ASR_CONFIG_BASE, (uint32_t *) &usOffset, (void *) &uiDataLen, ASR_CONFIG_LEN_SIZE);
-        if (ret != 0)
-        {
-            printf("asr_flash_read ASR_CONFIG_LEN_SIZE failed\r\n");
-            return ret;
-        }
-    } while (memcmp(ucParaName, pFactoryPara, ASR_CONFIG_NAME_SIZE));
-
-    *puiOffset = usOffset - ASR_CONFIG_LEN_SIZE - ASR_CONFIG_NAME_SIZE;
-
-    if (*pBufLen < uiDataLen)
-    {
-        return -1;
-    }
-
-    *pBufLen = uiDataLen;
-
-    ret = asr_flash_read(ASR_CONFIG_BASE, (uint32_t *) &usOffset, (void *) buf, uiDataLen);
-
-    if (ASR_FACTORY_HASH_PARTITION == matter_partition)
-    {
-        asr_factory_dac_private_key_offset = usOffset;
-    }
-
-    return ret;
+    return 0;
 }
 
-int32_t asr_factory_config_offset_search(asr_matter_partition_t matter_partition, uint32_t * puiOffset)
+int32_t asr_factory_config_buffer_write(asr_matter_partition_t matter_partition, const void * buf, uint32_t buf_len)
 {
-    if (NULL == puiOffset)
+    return 0;
+}
+
+static asr_tlv_context matter_tlv_ctx;
+
+uint32_t asr_matter_find_by_name(const char *name, uint8_t * buf, uint32_t buf_len, uint32_t * out_len)
+{
+    tlv_header_t tlv;
+
+    if (asr_tlv_find_by_name(&matter_tlv_ctx, &tlv, MIXCLASS_MATTERCONFIG_TAG, (char *)name)) // parse the data according to the tlv packaging tool
+    {
+        uint32_t value_len = tlv_htons(tlv->data_len);
+
+        value_len -= MAX_NAME_LEN;
+
+        if(value_len > buf_len)
+        {
+            printf("buf_len too small.\n");
+            return -2;
+        }
+
+        *out_len = value_len;
+
+        memcpy(buf, tlv->data + MAX_NAME_LEN, value_len);
+
+        return 0;
+    }
+    else
     {
         return -1;
     }
-
-    uint8_t * pFactoryPara = asr_factory_config_para[matter_partition];
-    uint32_t usOffset      = 0;
-    uint8_t ucParaName[8]  = { 0 };
-    int32_t ret            = 0;
-    uint32_t uiDataLen     = 0;
-
-    do
-    {
-        usOffset += uiDataLen;
-
-        ret = asr_flash_read(ASR_CONFIG_BASE, (uint32_t *) &usOffset, (void *) ucParaName, ASR_CONFIG_NAME_SIZE);
-        if (ret != 0)
-        {
-            printf("asr_flash_read ASR_CONFIG_NAME_SIZE failed\r\n");
-            return ret;
-        }
-
-        ret = asr_flash_read(ASR_CONFIG_BASE, (uint32_t *) &usOffset, (void *) &uiDataLen, ASR_CONFIG_LEN_SIZE);
-        if (ret != 0)
-        {
-            printf("asr_flash_read ASR_CONFIG_LEN_SIZE failed\r\n");
-            return ret;
-        }
-    } while (memcmp(ucParaName, pFactoryPara, ASR_CONFIG_NAME_SIZE));
-
-    *puiOffset = usOffset - ASR_CONFIG_LEN_SIZE - ASR_CONFIG_NAME_SIZE;
-    return 0;
 }
 
 int32_t asr_factory_config_read(asr_matter_partition_t matter_partition, uint8_t * buf, uint32_t buf_len, uint32_t * out_len)
 {
     int32_t ret        = 0;
-    uint32_t uiOffset  = 0;
-    uint32_t uiReadLen = buf_len;
-
-    memset(buf, 0, buf_len);
-
-    if (matter_partition == ASR_DAC_KEY_PARTITION)
+    if(matter_partition < ASR_MATTER_PARTITION_MAX)
     {
-        ret = asr_factory_dac_prvkey_get(buf, out_len);
-        if (ret != 0)
+        if (matter_partition == ASR_DAC_KEY_PARTITION)
         {
-            return ret;
+            ret = asr_factory_dac_prvkey_get(buf, out_len);
+            if (ret != 0)
+            {
+                return ret;
+            }
+        }
+        else
+        {
+            ret = asr_matter_find_by_name(asr_matter_partitions_table[matter_partition].partition_name, buf, buf_len, out_len);
+            if (ret != 0)
+            {
+                return ret;
+            }
         }
     }
     else
     {
-        ret = asr_factory_config_data_search(matter_partition, buf, &uiReadLen, &uiOffset);
-        if (ret != 0)
-        {
-            return ret;
-        }
-
-        *out_len = uiReadLen;
+        printf("can't find matter partition : %d.\n", matter_partition);
+        ret = -1;
     }
 
     return ret;
 }
 
-int32_t asr_factory_config_write(uint8_t * configbuffer, uint32_t buf_len)
+uint32_t asr_factory_toltal_len()
 {
-    if (buf_len > asr_factory_dac_private_key_offset)
-    {
-        printf("asr matter: write buffer too large.\n");
-        return -2;
-    }
-    uint32_t off_set = 0;
-
-    return asr_flash_erase_write(ASR_CONFIG_BASE, (uint32_t *) &off_set, (void *) configbuffer, buf_len);
+    tlv_area_header_t tlv_headr_p = (tlv_area_header_t)MATTER_FLASH_START_ADDR;
+    return tlv_headr_p->data_len + 3*sizeof(uint32_t);// magic_num,crc32_value,data_len
 }
 
-int32_t asr_factory_config_buffer_write(asr_matter_partition_t matter_partition, const void * buf, uint32_t buf_len)
-{
-    int ret            = 0;
-    uint32_t uiOffset  = 0;
-    uint32_t uiDataLen = 0;
-
-    ret = asr_factory_config_offset_search(matter_partition, &uiOffset);
-    if (ret != 0)
-    {
-        return ret;
-    }
-
-    uiOffset += ASR_CONFIG_NAME_SIZE;
-    ret = asr_flash_read(ASR_CONFIG_BASE, (uint32_t *) &uiOffset, (void *) &uiDataLen, ASR_CONFIG_LEN_SIZE);
-    if (ret != 0)
-    {
-        printf("read data len failed\r\n");
-        return ret;
-    }
-
-    if (buf_len != uiDataLen)
-    {
-        return -1;
-    }
-
-    uiOffset -= uiDataLen;
-
-    return asr_flash_erase_write(ASR_CONFIG_BASE, (uint32_t *) &uiOffset, (void *) buf, buf_len);
-}
 extern int32_t asr_factory_decrypt_dac_prvkey(uint8_t * pDacCipher, uint8_t ucDacKeyLen, uint8_t * pRdBuf, uint32_t * pOutLen);
+static uint32_t matter_config_value = 0;
 int32_t asr_factory_dac_prvkey_get(uint8_t * pRdBuf, uint32_t * pOutLen)
 {
-    uint32_t off_set = asr_factory_dac_private_key_offset;
-    uint8_t ucCipher[32];
-    int ret = 0;
-    uint8_t ucTmp[32];
-    uint32_t uiCipherLen = sizeof(ucCipher);
-
-    memset(ucTmp, 0, 32);
+    uint32_t off_set = asr_factory_toltal_len();
+    uint8_t ucCipher[DAC_PRIKEY_LEN];
+    int32_t ret = 0;
 
     if (NULL == pRdBuf || NULL == pOutLen)
     {
         return -1;
     }
-
-    // get DAC cipher
-    ret = asr_flash_read(ASR_CONFIG_BASE, (uint32_t *) &off_set, (void *) ucCipher, 32);
-    if (ret != 0)
-        return ret;
-
-    ret = memcmp(ucCipher, ucTmp, 32);
-    if (ret != 0)
+    if(matter_config_value & MATTER_NO_KEY)
     {
-        ret = asr_factory_decrypt_dac_prvkey(ucCipher, 32, pRdBuf, pOutLen);
-        if (ret != 0)
+        // get DAC cipher
+        ret = asr_flash_read(ASR_CONFIG_BASE, (uint32_t *) &off_set, (void *) ucCipher, DAC_PRIKEY_LEN);
+        if (ret == 0)
         {
-            printf("duet_factory_decrypt_dac_prvkey fail\r\n");
-            return ret;
+            ret = asr_factory_decrypt_dac_prvkey(ucCipher, 32, pRdBuf, pOutLen);
         }
     }
     else
     {
-        ret = asr_factory_config_data_search(ASR_DAC_KEY_PARTITION, pRdBuf, &uiCipherLen, &off_set);
-        if (ret != 0)
-        {
-            return -1;
-        }
+        ret = asr_matter_find_by_name(asr_matter_partitions_table[ASR_DAC_KEY_PARTITION].partition_name, pRdBuf, DAC_PRIKEY_LEN, pOutLen);
+    }
+    return ret;
+}
 
-        *pOutLen = uiCipherLen;
+static int asr_partition_members_count_cb(tlv_header_t tlv, void *arg1, void *arg2)
+{
+    int *count = arg1;
+
+    *count = *count + 1;
+
+    return 0;
+}
+
+static int32_t asr_partition_table_check(void)
+{
+    int32_t ret = 0;
+    uint8_t buf[4];
+    size_t outlen = 0;
+    uint32_t val;
+    ret = asr_matter_find_by_name(asr_matter_partitions_table[ASR_VERSION_PARTITION].partition_name, buf, sizeof(uint32_t), (uint32_t *) &outlen);
+    if(ret == 0)
+    {
+        val = *(uint32_t *) buf;
+        if(val == MATTER_FACTORY_VERSION)
+        {
+            ret = asr_matter_find_by_name(asr_matter_partitions_table[ASR_CONFIG_PARTITION].partition_name, buf, sizeof(uint32_t), (uint32_t *) &outlen);
+            if(ret == 0)
+            {
+                matter_config_value = *(uint32_t *) buf;
+            }
+        }
+        else
+        {
+            ret = -2;
+        }
+    }
+    return ret;
+}
+
+static int32_t asr_partition_table_load(void)
+{
+    int table_members = 0;
+
+    if (asr_tlv_poll_class_members(&matter_tlv_ctx, MIXCLASS_MATTERCONFIG_TAG, asr_partition_members_count_cb,
+                               &table_members, NULL))
+    {
+        //printf("table_members %d\n",table_members);
+        if (table_members > 0)
+        {
+            return asr_partition_table_check();
+        }
     }
 
-    return ret;
+    return -1;
 }
 
 uint8_t asr_factory_check()
 {
-    int ret                    = -1;
-    uint32_t uiOffset          = 0;
-    uint32_t uiRdLen           = 0;
-    HASH_Result_t hashOutBuff  = { 0 };
-    uint8_t ExceptHashBuff[32] = { 0 };
-    uint32_t uiBufLen          = sizeof(ExceptHashBuff);
-
-    ret = asr_factory_config_data_search(ASR_FACTORY_HASH_PARTITION, ExceptHashBuff, &uiBufLen, &uiRdLen);
-    if (ret != 0)
-    {
-        printf("asr_factory_config_data_search fail\r\n");
-        return -1;
-    }
-
-    uint8_t * ucRdBuf = lega_rtos_malloc(uiRdLen);
-    if (ucRdBuf == NULL)
+    if (asr_tlv_init(&matter_tlv_ctx, MATTER_FLASH_START_ADDR) != 0)
     {
         return -1;
     }
 
-    memset(ucRdBuf, 0x00, uiRdLen);
-
-    // read the factory bin.
-    ret = asr_flash_read(ASR_CONFIG_BASE, (uint32_t *) &uiOffset, ucRdBuf, uiRdLen);
-    if (ret != 0)
-    {
-        printf("read the factory bin. fail \r\n");
-        goto free_and_return;
-    }
-
-    // calculate the hash result of the factory bin.
-    ret = asr_hash(HASH_SHA256_mode, ucRdBuf, uiRdLen, hashOutBuff);
-    if (ret != 0)
-    {
-        goto free_and_return;
-    }
-
-    // check the factory bin's hash value.
-    ret = memcmp(ExceptHashBuff, hashOutBuff, 32);
-
-free_and_return:
-    lega_rtos_free(ucRdBuf);
-    return ret;
+    return asr_partition_table_load();
 }
 
 #endif
