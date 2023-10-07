@@ -536,7 +536,7 @@ bool is_matter_activity(uint16_t param);
 void adv_media_connect_start();
 void adv_media_beacon_start();
 void ble_matter_event_callback_reg(matter_event_callback_t cb);
-#if CONFIG_ENABLE_ASR_APP_MESH
+#ifdef CONFIG_ENABLE_ASR_APP_MESH
 void app_mesh_control_fan(uint8_t on_off);
 void app_mesh_control_light(uint8_t on_off);
 #endif

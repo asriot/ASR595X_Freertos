@@ -202,6 +202,8 @@ extern "C" {
 //#define PBUF_POOL_BUFSIZE               LWIP_MEM_ALIGN_SIZE(TCP_MSS+40+PBUF_LINK_HLEN)
 #define PBUF_POOL_BUFSIZE               1500
 
+#define LWIP_PBUF_FROM_CUSTOM_POOLS     0
+
 /*
    ---------- Network Interfaces options ----------
 */

@@ -116,7 +116,7 @@ int at_matter_sensors(int argc, char ** argv)
     return CONFIG_OK;
 }
 
-#if ENABLE_ASR_BRIDGE_SUBDEVICE_TEST
+#ifdef ENABLE_ASR_BRIDGE_SUBDEVICE_TEST
 void Sync_SubDevice_test(void);
 void Add_SubDevice_test(void);
 void Remove_SubDevice_test(void);
@@ -200,7 +200,7 @@ cmd_entry comm_at_simulate_sensors = {
     .help     = "matter_sensor_sim disable/[temp humi pressure]",
     .function = at_matter_sensors,
 };
-#if ENABLE_ASR_BRIDGE_SUBDEVICE_TEST
+#ifdef ENABLE_ASR_BRIDGE_SUBDEVICE_TEST
 cmd_entry comm_at_subdevice = {
     .name     = "subdevice",
     .help     = "subdevice sync/add/remove",
@@ -222,7 +222,7 @@ void lega_at_matter_cmd_register(void)
     lega_at_cmd_register(&comm_at_matter);
     //lega_at_cmd_register(&comm_at_reset_matter);
     lega_at_cmd_register(&comm_at_onoff);
-#if ENABLE_ASR_BRIDGE_SUBDEVICE_TEST
+#ifdef ENABLE_ASR_BRIDGE_SUBDEVICE_TEST
     lega_at_cmd_register(&comm_at_subdevice);
 #endif
     lega_at_cmd_register(&comm_at_simulate_sensors);

@@ -50,14 +50,14 @@
 #endif
 
 #include "app.h"
-#if BLE_BATT_SERVER
+#if defined(BLE_BATT_SERVER) && BLE_BATT_SERVER
 #include "sonata_prf_bass_api.h"
 #endif // BLE_BATT_SERVER
 #ifdef SONATA_RTOS_SUPPORT
 #include "lega_rtos_api.h"
 #endif
 #include "sonata_stack_user_config.h"
-#if CONFIG_ENABLE_ASR_APP_MESH
+#ifdef CONFIG_ENABLE_ASR_APP_MESH
 #include "sonata_mesh_api.h"
 
 #define MESH_OPCODE_VENDOR_OO_SET_UNACK (0x000917d1)
@@ -1730,7 +1730,7 @@ static void app_ble_on()
     cmd.max_mps                       = 0x02A0;
     cmd.max_nb_lecb                   = 0x0A;
     cmd.hl_trans_dbg                  = false;
-#if APP_WVT_ENABLE
+#if defined(APP_WVT_ENABLE) && APP_WVT_ENABLE
     cmd.hl_trans_dbg = true;
     printf("%s ,WVT Enable, \r\n", __FUNCTION__);
 #endif
@@ -1841,7 +1841,7 @@ static uint16_t app_ble_complete_event_handler(sonata_ble_complete_type opt_id, 
     case SONATA_GAP_CMP_BLE_ON: // 0x0F01
                                 // ble_adv_set_state[adv_idx] = APP_BLE_ADV_ON;
                                 // test_adv_h();
-#if CONFIG_ENABLE_ASR_APP_MESH
+#ifdef CONFIG_ENABLE_ASR_APP_MESH
         app_ble_on_callback(status);
 #endif
         if (ble_cb_fun != NULL)
@@ -3939,13 +3939,13 @@ int app_ble_set_max_mtu(uint16_t mtu)
  */
 void app_prf_api_init(void)
 {
-#if CONFIG_ENABLE_ASR_APP_MESH
+#ifdef CONFIG_ENABLE_ASR_APP_MESH
     sonata_mesh_api_init();
 #endif
-#if BLE_DIS_SERVER
+#if defined(BLE_DIS_SERVER) && BLE_DIS_SERVER
     sonata_prf_diss_init();
 #endif
-#if BLE_BATT_SERVER
+#if defined(BLE_BATT_SERVER) && BLE_BATT_SERVER
     sonata_prf_bass_init();
 #endif
 }

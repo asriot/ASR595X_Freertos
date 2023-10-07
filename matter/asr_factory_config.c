@@ -69,6 +69,11 @@ const matter_partition_t asr_matter_partitions_table[] =
     {
         .partition_name = "cert-dclrn",
     },
+    [ASR_CHIP_ID_PARTITION] =
+    {
+        .partition_name = "chip-id",
+    },
+#if CONFIG_ENABLE_ASR_FACTORY_DEVICE_INFO_PROVIDER
     [ASR_VENDOR_NAME_PARTITION] =
     {
         .partition_name = "vendor-name",
@@ -89,10 +94,6 @@ const matter_partition_t asr_matter_partitions_table[] =
     {
         .partition_name = "rd-id-uid",
     },
-    [ASR_CHIP_ID_PARTITION] =
-    {
-        .partition_name = "chip-id",
-    },
     [ASR_MANUFACTURY_DATE_PARTITION] =
     {
         .partition_name = "mfg-date",
@@ -109,6 +110,7 @@ const matter_partition_t asr_matter_partitions_table[] =
     {
         .partition_name = "hw-ver-str",
     },
+#endif
     [ASR_MATTER_PARTITION_MAX] =
     {
         .partition_name = NULL, //for end don't change,
