@@ -61,6 +61,26 @@ typedef enum {
     CONNECT_CONN_FAIL,
 } lega_start_adv_results_e;
 
+typedef struct
+{
+    char wifi_mode;     /* refer to hal_wifi_type_t*/
+    char security;      /* security mode, refer to lega_wlan_security_e */
+    char wifi_ssid[32]; /* in station mode, indicate SSID of the wlan needs to be connected.
+                           in softap mode, indicate softap SSID*/
+    char wifi_key[64];  /* in station mode, indicate Security key of the wlan needs to be connected,
+                           in softap mode, indicate softap password.(ignored in an open system.) */
+    uint32_t ssid_len;
+    uint32_t key_len;
+} lega_wlan_wifi_conf;
+
+typedef struct {
+    char    ssid[32+1];     /* ssid max len:32. +1 is for '\0'. when ssidlen is 32  */
+    char    ap_power;       /* Signal strength, min:0, max:100. */
+    char    bssid[6];       /* BSSID of an access point. */
+    char    channel;        /* RF frequency, 1-13 */
+    uint8_t security;       /* Security type, @ref wlan_sec_type_t */
+}lega_wlan_scan_ap_record_t;
+
 /**
  *  @brief  Scan result using normal scan.
  */
