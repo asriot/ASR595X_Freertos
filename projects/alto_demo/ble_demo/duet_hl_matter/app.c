@@ -1718,12 +1718,20 @@ void app_print_adv_status(void)
 static void app_ble_on()
 {
     APP_TRC("APP: %s  \r\n", __FUNCTION__);
+    uint8_t customAddress[SONATA_GAP_BD_ADDR_LEN];
+
+    for(int i = 0; i < SONATA_GAP_BD_ADDR_LEN; i++)
+    {
+        customAddress[i] = util_rand_byte();
+    }
+    customAddress[SONATA_GAP_BD_ADDR_LEN - 1] |= 0xc0;
     sonata_gap_set_dev_config_cmd cmd = { 0 };
     cmd.role                          = SONATA_GAP_ROLE_ALL;
     cmd.gap_start_hdl                 = 0;
     cmd.gatt_start_hdl                = 0;
     cmd.renew_dur                     = 0x0096;
-    cmd.privacy_cfg                   = 0;
+    memcpy(cmd.addr.addr, customAddress ,SONATA_GAP_BD_ADDR_LEN);
+    cmd.privacy_cfg                   = SONATA_GAP_PRIV_CFG_PRIV_ADDR_BIT;
     cmd.pairing_mode                  = SONATA_GAP_PAIRING_SEC_CON | SONATA_GAP_PAIRING_LEGACY;
     cmd.att_cfg                       = 0x0080;
     cmd.max_mtu                       = APP_BLE_MAX_MTU_SIZE;
