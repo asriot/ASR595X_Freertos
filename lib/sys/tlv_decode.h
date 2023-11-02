@@ -15,6 +15,10 @@
 #ifndef __TLV_DECODE_H_
 #define __TLV_DECODE_H_
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define MAX_NAME_LEN 16
 
 #define MIXTURE_PRIVATECLASS 0xFF00
@@ -73,4 +77,9 @@ int asr_tlv_find_by_name(asr_tlv_context *ctx, tlv_header_t *tlv, uint16_t mix_c
 
 int asr_tlv_poll_class_members(asr_tlv_context *ctx, uint16_t mix_class_tag, asr_tlv_iterator_cb callback, void *arg1, void *arg2);
 
+int32_t asr_factory_decrypt_dac_prvkey(uint8_t * pDacCipher, uint8_t ucDacKeyLen, uint8_t * pRdBuf, uint32_t * pOutLen);
+
+#ifdef __cplusplus
+}
+#endif
 #endif // __TLV_DECODE_H_
